@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
-
-// Shared CORS headers so the React frontend (different port) can call this API.
-const CORS = { "Access-Control-Allow-Origin": "*" };
+import { getClientPromise } from "@/lib/mongodb";
+import { requireUser } from "@/lib/auth";
+import CORS from "@/lib/cors";
+export { OPTIONS } from "@/lib/cors";
 
 async function getCollection() {
-  const client = await clientPromise;
-  const db = client.db("week10");
+  const client = await getClientPromise();
+  const db = client.db(process.env.DB_NAME || "week10");
   return db.collection("items");
 }
 
 // GET /api/items  -> list only items that are NOT soft-deleted.
-export async function GET() {
+export async function GET(request) {
+  const denied = requireUser(request);
+  if (denied) return denied;
   try {
     const collection = await getCollection();
 
@@ -30,6 +32,8 @@ export async function GET() {
 
 // POST /api/items  -> create a new item, defaulting status to "ACTIVE".
 export async function POST(request) {
+  const denied = requireUser(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     if (!body.name || !body.name.trim()) {

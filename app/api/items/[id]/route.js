@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
-import clientPromise from "@/lib/mongodb";
+import { getClientPromise } from "@/lib/mongodb";
+import { requireUser } from "@/lib/auth";
+import CORS from "@/lib/cors";
+export { OPTIONS } from "@/lib/cors";
 
-const CORS = { "Access-Control-Allow-Origin": "*" };
+
 
 async function getCollection() {
-  const client = await clientPromise;
-  const db = client.db("week10");
+  const client = await getClientPromise();
+  const db = client.db(process.env.DB_NAME || "week10");
   return db.collection("items");
 }
 
 // PUT /api/items/:id  -> update an item's fields (reference pattern for modifying data).
 export async function PUT(request, { params }) {
+  const denied = requireUser(request);
+  if (denied) return denied;
   try {
     const { id } = await params;
     const body = await request.json();
@@ -39,6 +44,8 @@ export async function PUT(request, { params }) {
 // DELETE /api/items/:id  -> SOFT delete.
 // Instead of removing the document, flip its status to "DELETED".
 export async function DELETE(request, { params }) {
+  const denied = requireUser(request);
+  if (denied) return denied;
   try {
     const { id } = await params;
     const collection = await getCollection();

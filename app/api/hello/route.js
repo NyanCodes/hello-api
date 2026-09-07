@@ -1,14 +1,6 @@
 import { NextResponse } from "next/server";
-
-// GET /api/hello  ->  { "message": "hello world" }
+import corsHeaders from "@/lib/cors";
+export { OPTIONS } from "@/lib/cors";
 export function GET() {
-  return NextResponse.json(
-    { message: "hello world" },
-    {
-      headers: {
-        // Allow the React frontend (different origin/port) to read this response
-        "Access-Control-Allow-Origin": "*",
-      },
-    }
-  );
+  return NextResponse.json({ message: "hello world" }, { headers: corsHeaders });
 }
